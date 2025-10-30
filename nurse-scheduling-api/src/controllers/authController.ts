@@ -55,28 +55,30 @@ export const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
-        // Check if user exists
+        // 1. ค้นหาผู้ใช้จากอีเมล
         const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Check if password matches
+        // 2. เปรียบเทียบรหัสผ่านที่ส่งมากับรหัสผ่านที่เข้ารหัสไว้ในฐานข้อมูล
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Generate JWT
+        // 3. สร้าง JWT Payload
         const payload = {
             id: user.id,
             role: user.role
         };
 
+        // 4. ลงนามสร้าง Token
         const token = jwt.sign(payload, process.env.JWT_SECRET || '', {
             expiresIn: process.env.JWT_EXPIRE
         });
 
+        // 5. ส่งข้อมูลกลับไปให้ Flutter App
         const response: AuthResponse = {
             success: true,
             token,
